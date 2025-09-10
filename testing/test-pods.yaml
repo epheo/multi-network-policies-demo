@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-client-pod
+  namespace: multi-network-demo
+  labels:
+    app: test-client
+spec:
+  containers:
+  - name: test-client
+    image: 'quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:1675dce351ccf97673cb38e8cd94b71530ad8fb96660f8afcabe3ca7045b07fa'
+    command: ["/bin/sleep", "infinity"]
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    readinessProbe:
+      exec:
+        command:
+        - /bin/true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+        - NET_RAW
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-client-dual-nic
+  namespace: multi-network-demo
+  labels:
+    app: test-client-dual
+  annotations:
+    k8s.v1.cni.cncf.io/networks: default/br-ex-network
+spec:
+  containers:
+  - name: test-client
+    image: 'quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:1675dce351ccf97673cb38e8cd94b71530ad8fb96660f8afcabe3ca7045b07fa'
+    command: ["/bin/sleep", "infinity"]
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+    readinessProbe:
+      exec:
+        command:
+        - /bin/true
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    securityContext:
+      capabilities:
+        add:
+        - NET_ADMIN
+        - NET_RAW
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-client-service
+  namespace: multi-network-demo
+spec:
+  selector:
+    app: test-client
+  ports:
+  - name: ssh
+    port: 22
+    targetPort: 22
+  - name: http
+    port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: network-test-scripts
+  namespace: multi-network-demo
+data:
+  install-tools.sh: |
+    #!/bin/bash
+    yum update -y
+    yum install -y iproute iputils tcpdump nmap bind-utils traceroute curl wget nc
+  test-connectivity.sh: |
+    #!/bin/bash
+    VM_POD_IP=$(kubectl get vmi fedora-dual-nic-vm -n multi-network-demo -o jsonpath='{.status.interfaces[0].ipAddress}')
+    VM_BR_EX_IP=$(kubectl get vmi fedora-dual-nic-vm -n multi-network-demo -o jsonpath='{.status.interfaces[1].ipAddress}')
+    
+    echo "Testing connectivity to VM Pod Network IP: $VM_POD_IP"
+    ping -c 3 $VM_POD_IP
+    
+    echo "Testing connectivity to VM br-ex Network IP: $VM_BR_EX_IP"
+    ping -c 3 $VM_BR_EX_IP
+    
+    echo "Testing SSH to Pod Network"
+    nc -zv $VM_POD_IP 22
+    
+    echo "Testing SSH to br-ex Network"
+    nc -zv $VM_BR_EX_IP 22

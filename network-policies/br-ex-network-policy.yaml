@@ -1,0 +1,39 @@
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: fedora-vm-br-ex-network-policy
+  namespace: multi-network-demo
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: br-ex-network
+spec:
+  podSelector:
+    matchLabels:
+      app: fedora-demo
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from: []
+    ports:
+    - protocol: UDP
+      port: 53
+  egress:
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: multi-network-demo
+    ports:
+    - protocol: TCP
+    - protocol: UDP

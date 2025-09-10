@@ -1,0 +1,74 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fedora-dual-nic-vm
+  namespace: multi-network-demo
+  labels:
+    app: fedora-demo
+    kubevirt.io/vm: fedora-dual-nic-vm
+spec:
+  dataVolumeTemplates:
+    - apiVersion: cdi.kubevirt.io/v1beta1
+      kind: DataVolume
+      metadata:
+        name: fedora-dual-nic-vm
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: fedora
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  runStrategy: RerunOnFailure
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: fedora-dual-nic-vm
+        app: fedora-demo
+      annotations:
+        k8s.v1.cni.cncf.io/networks: default/br-ex-network
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        memory:
+          guest: 1Gi
+        devices:
+          disks:
+          - name: rootdisk
+            disk:
+              bus: virtio
+          - name: cloudinitdisk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+          - name: br-ex-network
+            bridge: {}
+          networkInterfaceMultiqueue: true
+        machine:
+          type: pc-q35-rhel9.6.0
+        resources:
+          requests:
+            memory: 1Gi
+      evictionStrategy: LiveMigrate
+      networks:
+      - name: default
+        pod: {}
+      - name: br-ex-network
+        multus:
+          networkName: default/br-ex-network
+      volumes:
+        - dataVolume:
+            name: fedora-dual-nic-vm
+          name: rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              user: fedora
+              password: demopass # notsecret
+              chpasswd: { expire: False }

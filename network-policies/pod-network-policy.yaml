@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: fedora-vm-pod-network-policy
+  namespace: multi-network-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: fedora-demo
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: multi-network-demo
+    - podSelector:
+        matchLabels:
+          app: test-client
+    ports:
+    - protocol: TCP
+      port: 22
+  - from: []
+    ports:
+    - protocol: UDP
+      port: 53
+  egress:
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: multi-network-demo
+    ports:
+    - protocol: TCP
+    - protocol: UDP
+    

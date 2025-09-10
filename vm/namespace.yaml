@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multi-network-demo
+  labels:
+    name: multi-network-demo
+    app.kubernetes.io/name: multi-network-policies-demo
+    app.kubernetes.io/part-of: multi-network-demo
