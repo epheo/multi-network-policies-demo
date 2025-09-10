@@ -2,11 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - vm/namespace.yaml
-  - vm/fedora-vm.yaml
-  - testing/test-pods.yaml
-  - network-policies/
-  - network/
+  - infra/br-ex-network-attachment.yaml
+  - demo/namespace.yaml
+  - demo/fedora-vm.yaml
+  - demo/test-pod.yaml
+  - demo/ssh-access-control-policy.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: multi-network-demo

@@ -48,13 +48,9 @@ spec:
             masquerade: {}
           - name: br-ex-network
             bridge: {}
-          networkInterfaceMultiqueue: true
-        machine:
-          type: pc-q35-rhel9.6.0
         resources:
           requests:
             memory: 1Gi
-      evictionStrategy: LiveMigrate
       networks:
       - name: default
         pod: {}
@@ -72,3 +68,8 @@ spec:
               user: fedora
               password: demopass # notsecret
               chpasswd: { expire: False }
+              packages:
+                - httpd
+              runcmd:
+                - systemctl enable httpd
+                - systemctl start httpd
