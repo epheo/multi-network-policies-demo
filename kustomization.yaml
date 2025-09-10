@@ -6,6 +6,7 @@ resources:
   - vm/fedora-vm.yaml
   - testing/test-pods.yaml
   - network-policies/
+  - network/
 
 commonLabels:
   app.kubernetes.io/part-of: multi-network-demo

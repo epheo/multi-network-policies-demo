@@ -4,7 +4,7 @@ metadata:
   name: fedora-vm-br-ex-network-policy
   namespace: multi-network-demo
   annotations:
-    k8s.v1.cni.cncf.io/policy-for: br-ex-network
+    k8s.v1.cni.cncf.io/policy-for: default/br-ex-network
 spec:
   podSelector:
     matchLabels:

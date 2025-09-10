@@ -125,21 +125,21 @@ oc exec -n multi-network-demo test-client-pod -- ssh fedora@$VM_POD_IP
 ```bash
 # List all network policies
 oc get networkpolicy -n multi-network-demo
-oc get multinetworkpolicy -n multi-network-demo
+oc get multi-networkpolicy -n multi-network-demo
 
 # Describe specific policies
 oc describe networkpolicy fedora-vm-pod-network-policy -n multi-network-demo
-oc describe multinetworkpolicy br-ex-ssh-block-policy -n multi-network-demo
+oc describe multi-networkpolicy br-ex-ssh-block-policy -n multi-network-demo
 ```
 
 ## Expected Results
 
-| Test Scenario | Pod Network | br-ex Network |
-|---------------|-------------|---------------|
-| Baseline SSH | ✅ Works | ✅ Works |
-| After SSH Control Policy | ✅ Authorized Only | ❌ Blocked |
-| HTTP Access | ✅ Allowed | ✅ Allowed |
-| Full Policy Applied | ✅ Restricted Access | ❌ SSH Blocked |
+| Test Scenario            | Pod Network          | br-ex Network  |
+|--------------------------|----------------------|----------------|
+| Baseline SSH             | ✅ Works             | ✅ Works       |
+| After SSH Control Policy | ✅ Authorized Only   | ❌ Blocked     |
+| HTTP Access              | ✅ Allowed           | ✅ Allowed     |
+| Full Policy Applied      | ✅ Restricted Access | ❌ SSH Blocked |
 
 ## References
 
