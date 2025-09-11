@@ -1,11 +1,6 @@
 # Multi-Network Policies Demo with KubeVirt on OpenShift
 
-**MultiNetworkPolicy enforcement** on secondary networks using KubeVirt VMs with multiple network interfaces on OpenShift, managed through **ArgoCD GitOps**.
-
-- **Fedora VM** with dual NICs (pod network + br-ex-network)  
-- **SSH blocking** on secondary network (br-ex) via MultiNetworkPolicy
-- **Default behavior** maintained on primary pod network
-- **GitOps deployment** via ArgoCD
+**MultiNetworkPolicy enforcement** on secondary networks managed through **ArgoCD GitOps**.
 
 ```mermaid
 graph LR
@@ -22,7 +17,8 @@ graph LR
     end
     
     %% Traffic flows
-    CLIENT_ETH0 ==>|SSH ✅ Works<br/>Default Allow| VM_ETH0
+    CLIENT_ETH0 ==>|SSH ✅ HTTP ✅<br/>Default Allow| VM_ETH0
+    CLIENT_NET1 ==>|HTTP ✅ Works<br/>Port 80 Open| VM_NET1
     CLIENT_NET1 -.->|SSH ❌ Blocked<br/>MultiNetworkPolicy| VM_NET1
     
     %% Styling
@@ -37,6 +33,13 @@ graph LR
     class VM_NET1,CLIENT_NET1 brexInterfaceStyle
 ```
 
+## References
+
+- [OVN-Kubernetes MultiNetworkPolicy](https://github.com/ovn-kubernetes/ovn-kubernetes/blob/master/docs/features/multiple-networks/multi-network-policies.md)
+- [OpenShift - Understanding multiple networks](https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/understanding-multiple-networks)
+- [OpenShift - Secondary networks](https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/multiple_networks/secondary-networks)
+- [OpenShift - MultiNetworkPolicy](https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/network_apis/multinetworkpolicy-k8s-cni-cncf-io-v1beta1)
+
 ## Quick Start
 
 Make sure MultiNetworkPolicy is enabled on the cluster:
@@ -47,7 +50,7 @@ oc patch network.operator.openshift.io cluster --type=merge --patch-file=infra/m
 oc api-resources |grep MultiNetworkPolicy
 ```
 
-### Deploy via ArgoCD
+Deploy via ArgoCD:
 
 ```bash
 # Create ArgoCD application
@@ -58,31 +61,15 @@ argocd app get multi-network-policies-demo
 argocd app sync multi-network-policies-demo
 ```
 
-## Demo Flow
-
-### Baseline Connectivity
-
-- VM boots with two network interfaces
-- Test connectivity on both networks
-- Verify SSH access works on both interfaces
-
-### MultiNetworkPolicy Application
-
-- Apply MultiNetworkPolicy to block SSH on br-ex-network
-- Demonstrate secondary network security enforcement
-- Show network attachment definition requirements
-
 ## Testing Commands
 
 ```bash
 # Get VM IP addresses
-VM_POD_IP=$(oc get vmi fedora-dual-nic-vm -n multi-network-demo -o jsonpath='{.status.interfaces[0].ipAddress}')
-VM_BR_EX_IP=$(oc get vmi fedora-dual-nic-vm -n multi-network-demo -o jsonpath='{.status.interfaces[1].ipAddress}')
+oc get vmi fedora-dual-nic-vm -n multi-network-demo -o jsonpath='{.status.interfaces[0].ipAddress}'
+oc get vmi fedora-dual-nic-vm -n multi-network-demo -o jsonpath='{.status.interfaces[1].ipAddress}'
 
 # Test SSH connectivity from test client
-oc exec -n multi-network-demo test-client-dual-nic -- timeout 10 nc -zv $VM_POD_IP 22
-oc exec -n multi-network-demo test-client-dual-nic -- timeout 10 nc -zv $VM_BR_EX_IP 22
-
+oc exec -it -n multi-network-demo test-client-dual-nic -- /bin/bash
 ```
 
 ## Viewing Policy Status
@@ -105,10 +92,3 @@ oc describe multi-networkpolicy br-ex-ssh-block-policy -n multi-network-demo
 ## Configuration Notes
 
 **Subnets field is required**: The NetworkAttachmentDefinition must include a `subnets` field in the CNI configuration
-
-## References
-
-- [KubeVirt Documentation](https://kubevirt.io/user-guide/)
-- [OpenShift Virtualization](https://docs.openshift.com/container-platform/latest/virt/about-virt.html)
-- [OVN-Kubernetes MultiNetworkPolicy](https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/multi-networks.md)
-- [Kubernetes Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/)

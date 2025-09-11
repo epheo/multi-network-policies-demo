@@ -5,7 +5,6 @@ metadata:
   namespace: multi-network-demo
   labels:
     app: fedora-demo
-    kubevirt.io/vm: fedora-dual-nic-vm
 spec:
   dataVolumeTemplates:
     - apiVersion: cdi.kubevirt.io/v1beta1
@@ -20,12 +19,11 @@ spec:
         storage:
           resources:
             requests:
-              storage: 30Gi
+              storage: 10Gi
   runStrategy: RerunOnFailure
   template:
     metadata:
       labels:
-        kubevirt.io/vm: fedora-dual-nic-vm
         app: fedora-demo
       annotations:
         k8s.v1.cni.cncf.io/networks: default/br-ex-network
@@ -48,9 +46,6 @@ spec:
             masquerade: {}
           - name: br-ex-network
             bridge: {}
-        resources:
-          requests:
-            memory: 1Gi
       networks:
       - name: default
         pod: {}
@@ -58,9 +53,9 @@ spec:
         multus:
           networkName: default/br-ex-network
       volumes:
-        - dataVolume:
+        - name: rootdisk
+          dataVolume:
             name: fedora-dual-nic-vm
-          name: rootdisk
         - name: cloudinitdisk
           cloudInitNoCloud:
             userData: |-

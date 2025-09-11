@@ -14,9 +14,8 @@ spec:
   ingress:
   - from: []
     ports:
-    - protocol: UDP
-      port: 53
     - protocol: TCP
       port: 80
     - protocol: TCP
       port: 443
+      
