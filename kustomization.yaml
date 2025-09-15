@@ -6,7 +6,7 @@ resources:
   - demo/namespace.yaml
   - demo/fedora-vm.yaml
   - demo/test-pod.yaml
-  # - demo/ssh-access-control-policy.yaml
+  - demo/ssh-access-control-policy.yaml
 
 commonLabels:
   app.kubernetes.io/part-of: multi-network-demo
